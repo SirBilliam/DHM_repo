@@ -7,7 +7,7 @@ create an animation that applies sumFFT_allProfs1Frame to each frame of a measur
 @author: bill
 """
 
-from binkoala2 import read_bin
+from binkoala import read_bin
 import numpy as np
 import matplotlib.pyplot as plt 
 import matplotlib.animation as animation

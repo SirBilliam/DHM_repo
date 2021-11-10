@@ -10,7 +10,7 @@ from scipy.fft import rfft, rfftfreq, irfft
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy.signal import find_peaks, peak_prominences
-import binkoala2
+import binkoala
 from scipy.ndimage import gaussian_filter1d
 import time
 import multiprocessing as mp
@@ -20,14 +20,11 @@ import csv
 import pandas as pd
 
 # choose the DHM measurement folder with phase.bin files
-folder = "Z:\\wave_pool\\10272021G_bc\\"
+folder = "Z:\\wave_pool\\10122021B_bc\\"
 # initialize the data by reading from one bin file
-phasePath = "temporal_nooffset\\Phase\\Float\\Bin"
-xa, ya, z, header = binkoala2.read_bin(folder+phasePath+"\\01000_phase.bin")
-# convert to microns from meters
-xa = xa*10**6
-ya = ya*10**6
-z = z*10**6
+phasePath = "offset_removed\\UnwrappedPhase\\Float\\Bin"
+xa, ya, z, header = binkoala.read_bin_conv(folder+phasePath+"\\01000_phase.bin")
+# xa, ya, and z are in microns
 # set the x-axis for the FFT; wave numbers in this case
 N = len(xa)
 D = np.amax(xa)
@@ -50,8 +47,7 @@ def ProfFFT(line):
 
 # create a cuntion that reads one bin file and then runs ProfFFT on each row of data
 def FramesFFT(filepath):
-    xa, ya, z, header = binkoala2.read_bin(filepath)
-    z=z*10**6
+    xa, ya, z, header = binkoala.read_bin_conv(filepath)
     for line in range(800):
         ProfFFT(line)
 

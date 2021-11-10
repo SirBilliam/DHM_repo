@@ -9,7 +9,8 @@ from scipy.fft import rfft, rfftfreq, irfft
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy.signal import find_peaks, peak_prominences
-import binkoala
+from access_data import get_single_frame, get_sequence
+import platform
 from scipy.ndimage import gaussian_filter1d
 import os
 import time
@@ -18,49 +19,68 @@ import concurrent.futures
 
 # define frames per second for this data
 fps=12800
-#define point to track
-x = 399
-y = 399
+
+# sequence id
+seq_id = '10122021A_bc'
+exp_type = 'wave_pool'
+data_file_postfix = 'full_test'
+save_folder = 'media'
 plot_name = "1point_timeFFT.pdf"
 
-#for each frame grab the DHM data (height) for the central pixel
-
-folder = "Z:\\wave_pool\\10272021B_bc\\"
-bin_path = "temporal_nooffset\\Phase\\Float\\Bin"
+# sequence to extract (cutoff: 'time' or 'frame')
+cutoff = 'frame'
+init_time = 1.5
+final_time = 2.5
+init_frame = 0
+final_frame = 500
+smoothing = False
+sigma = 5
 h = [] #initialize array of heights of central pixel
-f = [] #initialize array of frames corresponding to height at same index
-filepaths = [] #initialize paths to files containing each frames phase.bin
+t= [] #initialize array of times corresponding to height at same index
 
-def binPoint(filepath):
-    z, header = binkoala.read_mat_bin(filepath)
-    h.append(z[y][x]/3.14159)
-    f.append(int(filepath[60:65]))
+# get os type
+if platform.system() == 'Darwin':
+    root = '/Volumes/atom_library'
+    cd = '/'
+elif platform.system() == 'Windows':
+    root = 'Z:'
+    cd = '\\'
 
-st = time.time()
-for frame in os.scandir(folder+bin_path):
-    filepaths.append(frame.path)
-print(time.time()-st)
+# workding directory
+seq_dir = root + cd + exp_type + cd + seq_id + cd
+
+# get time and frame vectors
+times, frames = get_sequence(seq_id,exp_type,cutoff=cutoff,init_time=init_time,final_time=final_time, \
+                         init_frame=init_frame,final_frame=final_frame)
+
+#for each frame grab the DHM data (height) for the central pixel
+def binPoint(k):
+    x, y, z = get_single_frame(seq_id,exp_type,frames[k],get_xy=True,smoothing=smoothing,sigma_smooth=sigma,file_postfix=data_file_postfix)
+    h.append(z[len(y)//2][len(x)//2])
+    t.append(times[k])
+
 
 st2 = time.time()
-if __name__ == '__main__':
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.map(binPoint, filepaths)
+
+for k in frames:
+    binPoint(k)
+
+# if __name__ == '__main__':
+#     with concurrent.futures.ThreadPoolExecutor() as executor:
+#         executor.map(binPoint, frames)
 print(time.time()-st2)
 
-f = np.asarray(f)
-
-fig = plt.figure(figsize=(6,6), dpi=150, facecolor='gray', linewidth=2)
+fig = plt.figure(figsize=(6,6), dpi=200, facecolor='gray', linewidth=2)
 
 #plot the time series data
 ax1 = fig.add_subplot(2, 1, 1)
 ax1.set(xlabel='time (seconds)', ylabel='height (microns)',
         title='time series from DHM, corresponding FFT')
-time = f/fps
-ax1.plot(time, h)
+ax1.plot(t, h)
 
 #perform FFT on time series
-N = len(time)
-D = np.amax(time)
+N = len(t)
+D = np.amax(t)
 yf = np.abs(rfft(h))
 xf = rfftfreq(N, D/N)
 
@@ -69,7 +89,7 @@ ax2 = fig.add_subplot(2, 1, 2, ylim=(-2,8), xlim=(0,1000))
 ax2.set(xlabel='frequency (Hz)', ylabel='amplitude (??)')
 ax2.plot(xf, np.log(yf/1000))
 
-plt.savefig(folder + plot_name)
+plt.savefig(seq_dir + save_folder + plot_name)
 
 # peaks = find_peaks(yf/1000, prominence=5)
 # #print(peaks[0])

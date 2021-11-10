@@ -23,22 +23,19 @@ from scipy.fft import rfft, rfftfreq, irfft
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy.signal import find_peaks
-import binkoala2
+import binkoala
 from scipy.ndimage import gaussian_filter1d
 
 #extract profile from phase bin
-# Jeremy's binkoala2 gives x-axis, y-axis, and z height in meters
-xa, ya, z, header = binkoala2.read_bin("Z:\\wave_pool\\10272021D_bc\\temporal_nooffset\\Phase\\Float\\Bin\\00500_phase.bin")
-# conver to microns
-xa=xa*10**6
-ya=ya*10**6
-z=z*10**6
+# Jeremy's binkoala gives x-axis, y-axis, and z height in microns
+xa, ya, z, header = binkoala.read_bin_conv("Z:\\wave_pool\\10122021A_bc\\Time_unwrapped\\Phase\\Float\\Bin\\00100_phase.bin")
+# xa, ya, z, header = binkoala.read_bin_conv("Z:\\wave_pool\\10122021A_bc\\offset_removed\\UnwrappedPhase\\Float\\Bin\\00002_phase.bin")
 y = z[399][0:800]
 #y = gaussian_filter1d(y,10)
 
 #plot it
 fig = plt.figure(figsize=(6,4), dpi=200, facecolor='gray', linewidth=2)
-ax1 = fig.add_subplot(2,1,1, ylim=(-100,100))
+ax1 = fig.add_subplot(2,1,1, ylim=(-10,10))
 ax1.set(xlabel='horizontal dimension (microns)', ylabel='height (microns)',
        title='profile from DHM')
 ax1.plot(xa, y)
@@ -70,32 +67,32 @@ for i in peakInds:
     peakWL.append(1/xf[i])
 print(peakWL)
 
-# magnitude of wavenumber peaks
-peakAmps = [ ]
-for i in peakInds:
-    peakAmps.append(np.abs(yf)[i])
-#print(peakAmps)
+# # magnitude of wavenumber peaks
+# peakAmps = [ ]
+# for i in peakInds:
+#     peakAmps.append(np.abs(yf)[i])
+# #print(peakAmps)
 
-# filter out points in wavenumber space that have amplitude less than a threshold 
-# (it would be good to automatically set this threshold to correspond the the Niquist limit above, 6.3um wavelength)
-count=0
-for i in np.abs(yf):
-    if i < biggest/100:
-        yf[count]=0
-    count=count+1
+# # filter out points in wavenumber space that have amplitude less than a threshold 
+# # (it would be good to automatically set this threshold to correspond the the Niquist limit above, 6.3um wavelength)
+# count=0
+# for i in np.abs(yf):
+#     if i < biggest/100:
+#         yf[count]=0
+#     count=count+1
 
-# perform an inverse FFT to get back the profile based only on the reliable wavenumber peaks
-newY = irfft(yf)
-# compare to measured profile as sanity check
-fig2 = plt.figure(figsize=(6,4), dpi=200, facecolor='gray', linewidth=2)
-ax1 = fig2.add_subplot(2,1,1,ylim=(-100,100))
-ax1.set(xlabel='horizontal dimension (microns)', ylabel='height (microns)',
-       title='profile from DHM')
-ax1.plot(xa, newY)
+# # perform an inverse FFT to get back the profile based only on the reliable wavenumber peaks
+# newY = irfft(yf)
+# # compare to measured profile as sanity check
+# fig2 = plt.figure(figsize=(6,4), dpi=200, facecolor='gray', linewidth=2)
+# ax1 = fig2.add_subplot(2,1,1,ylim=(-100,100))
+# ax1.set(xlabel='horizontal dimension (microns)', ylabel='height (microns)',
+#        title='profile from DHM')
+# ax1.plot(xa, newY)
 
-# weight the amplitude of the peaks in wavenumber space by the wavenumber
-peakAmpsW = [i/j for i,j in zip(peakAmps,peakWL)]
-#plot the chosen wavelengths with their associated weights
-ax2 = fig2.add_subplot(2,1,2)
-ax2.set(xlabel='horizontal dimension (microns)', ylabel='height (microns)')
-ax2.scatter(peakWL[1:],peakAmpsW[1:])
+# # weight the amplitude of the peaks in wavenumber space by the wavenumber
+# peakAmpsW = [i/j for i,j in zip(peakAmps,peakWL)]
+# #plot the chosen wavelengths with their associated weights
+# ax2 = fig2.add_subplot(2,1,2)
+# ax2.set(xlabel='horizontal dimension (microns)', ylabel='height (microns)')
+# ax2.scatter(peakWL[1:],peakAmpsW[1:])

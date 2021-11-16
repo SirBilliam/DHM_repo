@@ -20,9 +20,9 @@ from scipy.ndimage import gaussian_filter1d
 
 
 # sequence id
-seq_id = '10122021B_bc'
+seq_id = '10122021A_bc'
 exp_type = 'wave_pool'
-data_file_postfix = 'full_test'
+data_file_postfix = '_cal_test'
 anim_file_postfix = 'profileFFT_animation'
 save_folder = 'media'
 
@@ -31,7 +31,7 @@ cutoff = 'frame'
 init_time = 1.5
 final_time = 2.5
 init_frame = 0
-final_frame = 500
+final_frame = 10000
 fps = 15
 smoothing = False
 sigma = 5

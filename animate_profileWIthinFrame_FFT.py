@@ -7,7 +7,7 @@ of data in a single frame of DHM measurement
 
 @author: bill
 """
-from binkoala2 import read_bin
+from binkoala import read_bin_conv
 from scipy.fft import rfft, rfftfreq
 from scipy.ndimage import gaussian_filter1d
 import numpy as np
@@ -31,7 +31,7 @@ frame = "temporal_nooffset\\Phase\\Float\\Bin\\01700_phase.bin"
 
 # function that updates a plot of the profile for a given row
 def ProfsFFT(row_number):
-    xa, ya, z, header = read_bin(folder + frame)
+    xa, ya, z, header = read_bin_conv(folder + frame)
     xa = xa*10**6
     ya = ya*10**6
     z = z*10**6
@@ -48,7 +48,7 @@ def ProfsFFT(row_number):
     plot2[0], = ax2.plot(xf, np.log(np.abs(yf)), color='green')
     txt[0] = ax1.text(1000,70,"row: " + str(row_number))
   
-xa, ya, z, header = read_bin(folder + frame)
+xa, ya, z, header = read_bin_conv(folder + frame)
 xa = xa*10**6
 ya = ya*10**6
 z = z*10**6

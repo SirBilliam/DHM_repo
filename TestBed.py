@@ -1,40 +1,37 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Nov  2 16:56:36 2021
-
-fit the zero frame to 2nd order surface and subtract that from a test frame
-then plot the calibrated 3D surface
+Created on Sat Nov 13 21:36:07 2021
 
 @author: bill
 """
-from access_data import get_single_frame
-import calibrate_surface as cs
-import numpy as np
+
+from scipy import signal
 import matplotlib.pyplot as plt
-from binkoala2 import read_bin
-import time
+import numpy as np
 
+b, a = signal.butter(4, 100, 'low', analog=True)
+w, h = signal.freqs(b, a)
+plt.semilogx(w, 20 * np.log10(abs(h)))
+plt.title('Butterworth filter frequency response')
+plt.xlabel('Frequency [radians / second]')
+plt.ylabel('Amplitude [dB]')
+plt.margins(0, 0.1)
+plt.grid(which='both', axis='both')
+plt.axvline(100, color='green') # cutoff frequency
+plt.show()
 
-seq_id = '10272021A_bc'
-cal_frame = 0
-test_frame = 1100
-x_range = range(800)
-y_range = range(800)
+t = np.linspace(0, 1, 1000, False)  # 1 second
+sig = np.sin(2*np.pi*10*t) + np.sin(2*np.pi*20*t)
+fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+ax1.plot(t, sig)
+ax1.set_title('10 Hz and 20 Hz sinusoids')
+ax1.axis([0, 1, -2, 2])
 
-Zero = get_single_frame(seq_id, cal_frame, x_range, y_range)
-
-Z_cal, a, b = cs.fit_surface(Zero)
-
-Z = get_single_frame(seq_id, test_frame, x_range, y_range)
-
-Z_out = cs.calibrate_surface(Z, Z_cal)
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.set_zlim(-50,50)
-
-x_axis, y_axis, z, bin_header = read_bin(r"Z:\wave_pool\10272021A_bc\temporal_nooffset\Phase\Float\Bin\00000_phase.bin")
-
-X, Y = np.meshgrid(x_axis*10**6,y_axis*10**6)
-
-ax.plot_surface(X, Y, Z_out*10**6, cmap="magma")
+sos = signal.butter(10, 15, 'hp', fs=1000, output='sos')
+filtered = signal.sosfilt(sos, sig)
+ax2.plot(t, filtered)
+ax2.set_title('After 15 Hz high-pass filter')
+ax2.axis([0, 1, -2, 2])
+ax2.set_xlabel('Time [seconds]')
+plt.tight_layout()
+plt.show()
